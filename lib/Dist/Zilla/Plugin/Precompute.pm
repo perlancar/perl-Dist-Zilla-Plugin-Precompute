@@ -18,7 +18,8 @@ with (
 
 use namespace::autoclean;
 
-sub mvp_multivalue_args { qw(var) }
+sub mvp_multivalue_args { qw(code) }
+has code => (is => 'rw');
 
 sub munge_files {
     my $self = shift;
@@ -31,6 +32,16 @@ sub munge_file {
     my ($self, $file) = @_;
 
     my $content = $file->content;
+    my $code = $self->code;
+    my $var = $self->plugin_name;
+
+    state %mem;
+    unless ($code) {
+        $self->log(["Skipping precomputing '\$var' because code is not defined"])
+            unless $mem{$var};
+        return;
+    }
+    if (ref($code) eq 'ARRAY') { $code = join '', @$code }
 
     my $munged_date = 0;
     my $modified =
@@ -44,14 +55,11 @@ sub munge_file {
                      {
                          $self->log_debug(['precomputing $%s in %s ...',
                                            $2, $file->name]);
-                         $1. '$'.$2 . ' = '. dump1($self->precompute($2)) . $4
+                         my $res = eval $code;
+                         die if $@;
+                         $1. '$'.$2 . ' = '. dump1($res) . $3
                      }egmx;
-    use DD; dd $self;
     $file->content($content) if $modified;
-}
-
-sub precompute {
-    "foo";
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -64,8 +72,8 @@ __PACKAGE__->meta->make_immutable;
 
 In C<dist.ini>:
 
- [Precompute]
- var=foo Some::Module->_init_value;
+ [Precompute/foo]
+ code=Some::Module->_init_value;
 
 in your module C<lib/Some/Module.pm>:
 
