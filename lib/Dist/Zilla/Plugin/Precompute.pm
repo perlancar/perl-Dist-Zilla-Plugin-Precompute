@@ -37,28 +37,39 @@ sub munge_file {
 
     state %mem;
     unless ($code) {
-        $self->log(["Skipping precomputing '\$var' because code is not defined"])
-            unless $mem{$var};
+        $self->log(["Skipping precomputing '\$var' because code is not defined"]);
         return;
     }
     if (ref($code) eq 'ARRAY') { $code = join '', @$code }
 
+    my ($pkg) = $content =~ /^\s*package\s+(\w+(?:::\w+)*)/m;
+    $var = "$pkg\::$var" unless $var =~ /::/;
+
     my $munged_date = 0;
-    my $modified =
-        $content =~ s{^
-                      (\s*(?:(?:my|our|local)\s+))? #1 optional prefix
-                      \$(\w+(?:::\w+)*) #2 variable name
-                      (?:\s*=s\s*.+?)? #3 optional current value
-                      (;\s*\#\s*PRECOMPUTE) #4 marker
-                      $
-                 }
-                     {
+    my $modified;
+
+    $content =~ s{^
+                  (\s*(?:(?:my|our|local)\s+))? #1 optional prefix
+                  \$(\w+(?:::\w+)*) #2 variable name
+                  (\s*=s\s*.+?)? # optional current value
+                  (;\s*\#\s*PRECOMPUTE) #3 marker
+                  $
+             }
+                 {
+                     say "var=$var vs pkg+var=$pkg\::$2";
+                     if ($var eq "$pkg\::$2") {
+                         $modified++;
                          $self->log_debug(['precomputing $%s in %s ...',
                                            $2, $file->name]);
-                         my $res = eval $code;
+                         my $res = exists($mem{$var}) ? $mem{$var}:eval($code);
                          die if $@;
-                         $1. '$'.$2 . ' = '. dump1($res) . $3
-                     }egmx;
+                         $mem{$var} = $res;
+                         $1. '$'.$2 . ' = '. dump1($res) . $4;
+                     } else {
+                         # return original string
+                         $1. '$'.$2 . ($3 // '') . $4
+                     }
+                 }egmx;
     $file->content($content) if $modified;
 }
 
@@ -72,16 +83,33 @@ __PACKAGE__->meta->make_immutable;
 
 In C<dist.ini>:
 
- [Precompute/foo]
+ [Precompute/FOO]
  code=Some::Module->_init_value;
+ [Precompute / Some::Module::BAR]
+ code=some Perl code
 
 in your module C<lib/Some/Module.pm>:
 
- our $foo; # PRECOMPUTE
+ package Some::Module;
+ our $FOO; # PRECOMPUTE
+ our $BAR; # PRECOMPUTE
 
-The generated module file:
+in your module C<lib/Some/OtherModule.pm>:
 
- our $foo = ["some", "value", "..."]; # PRECOMPUTE
+ package Some::OtherModule;
+ our $FOO; # PRECOMPUTE
+ our $BAR; # PRECOMPUTE
+
+In the generated C<lib/Some/Module.pm>:
+
+ our $FOO = ["some", "value", "..."]; # PRECOMPUTE
+ our $BAR = "some other value"; # PRECOMPUTE
+
+In the generated C<lib/Some/OtherModule.pm> (the second precompute only matches
+C<$Some::Module::BAR> and not C<$BAR> from other package):
+
+ our $FOO = ["some", "value", "..."]; # PRECOMPUTE
+ our $BAR; # PRECOMPUTE
 
 
 =head1 DESCRIPTION
