@@ -1,5 +1,12 @@
 Revision history for Dist-Zilla-Plugin-Precompute
 
+0.02     2014-10-02 (PERLANCAR)
+
+         [BUG FIXES]
+
+         - [build] Misplaced prerequisite line.
+
+
 0.01     2014-09-30 (PERLANCAR)
 
          - First release.
