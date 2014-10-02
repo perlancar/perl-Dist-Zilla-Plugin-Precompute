@@ -1,5 +1,10 @@
 Revision history for Dist-Zilla-Plugin-Precompute
 
+0.03    2014-10-02 (PERLANCAR)
+
+	- Can now specify fully-qualified variable name in dist.ini.
+
+
 0.02     2014-10-02 (PERLANCAR)
 
          [BUG FIXES]
