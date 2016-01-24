@@ -1,4 +1,14 @@
-Revision history for Dist-Zilla-Plugin-Precompute
+Revision history for Dist-Zilla-Plugin-PrecomputeVariable
+
+0.04    2016-01-24 (PERLANCAR) (unreleased)
+
+        [Incompatible changes]
+
+        - Renamed module/dist from DZP-Precompute to DZP-PrecomputeVariable
+          because it was modified in a backward-incompatible way.
+
+        - Syntax change.
+
 
 0.03    2014-10-02 (PERLANCAR)
 
