@@ -1,4 +1,4 @@
-0.04    2016-01-24 (PERLANCAR)
+0.04    2016-01-24  Released-By: PERLANCAR
 
         [Incompatible changes]
 
@@ -9,18 +9,18 @@
           precomputation, and for better checks during build.
 
 
-0.03    2014-10-02 (PERLANCAR)
+0.03    2014-10-02  Released-By: PERLANCAR
 
 	- Can now specify fully-qualified variable name in dist.ini.
 
 
-0.02     2014-10-02 (PERLANCAR)
+0.02     2014-10-02  Released-By: PERLANCAR
 
          [BUG FIXES]
 
          - [build] Misplaced prerequisite line.
 
 
-0.01     2014-09-30 (PERLANCAR)
+0.01     2014-09-30  Released-By: PERLANCAR
 
          - First release.
